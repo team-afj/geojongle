@@ -14,10 +14,10 @@ Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const make_marker = (address: Address) => {
   let m = Leaflet.marker([address.osm_data.lat, address.osm_data.lon]).addTo(
-    map,
+    map
   );
   m.bindPopup(
-    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`,
+    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`
   ).openPopup();
   return m;
 };
