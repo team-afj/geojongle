@@ -6,6 +6,7 @@
   "author": "Ulysse Gérard <thevoodoos@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "bulma": "^0.9.4",
     "esbuild": "^0.18.12",
     "leaflet": "^1.9.4",
     "prettier": "^3.0.0"
