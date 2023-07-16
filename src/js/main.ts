@@ -4,6 +4,8 @@ import { Address, addresses } from "./data";
 
 Leaflet.Icon.Default.imagePath = "images/";
 
+const table = document.getElementById("data-tbl")! as HTMLTableElement;
+
 let map = Leaflet.map("map").setView([46.603354, 1.8883335], 5);
 
 Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -22,8 +24,40 @@ const make_marker = (address: Address) => {
   return m;
 };
 
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+const table_rows = addresses.map((address) => {
+  let row = document.createElement("tr");
+  let id = document.createElement("td");
+  id.innerHTML = address.id.toString();
+  let name = document.createElement("td");
+  name.innerHTML = address.name;
+  let city = document.createElement("td");
+  city.innerHTML = address.city;
+
+  row.appendChild(id);
+  row.appendChild(name);
+  row.appendChild(city);
+  return row;
+});
+
 const markers = addresses.map(make_marker);
 
+const reset_table = (addresses: Address[]) => {
+  // Empty the table
+  table.querySelectorAll("tbody").forEach((tbody) => {
+    tbody.remove();
+  });
+  // Add new values
+  addresses.forEach((address) => {
+    let row = table.insertRow();
+    row.insertCell().innerHTML = address.id.toString();
+    row.insertCell().innerHTML = address.name;
+    row.insertCell().innerHTML = address.city;
+  });
+  // rows.forEach((row) => table?.appendChild(row));
+};
+
+reset_table(addresses);
 console.log(addresses);
 
 /*
