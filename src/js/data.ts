@@ -1,15 +1,31 @@
-export const addresses = [
+interface Address {
+  id: number;
+  name: string;
+  tags: string[];
+  address: string;
+  cp: string;
+  city: string;
+  phone: string;
+  url: string;
+  description: string;
+  lat: number;
+  lon: number;
+  osm_data: any
+}
+
+const addresses : Address[] = [
     {
         id: 0,
         name: "Atelier de l'Association Parisienne de Jonglerie",
+        tags:["atelier"],
         address: "35 rue du Borrégo",
         cp: "75019",
         city: "Paris",
-        tel: "",
-        web: "https://www.facebook.com/groups/AssoAPJ",
-        description: "Un atelier de pratique libre.",
-        lat: "48.873487",
-        lon: "2.4016703",
+        phone: "",
+        url: "https://www.facebook.com/groups/AssoAPJ",
+        description: "Un atelier de pratique libre tous les lundis soir de 18 à 22h. Consultez notre page Facebook pour vérifier que nous sommes ouverts !",
+        lat: 48.873487,
+        lon: 2.4016703,
         osm_data:   {
             "place_id": 17678739,
             "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
@@ -46,3 +62,5 @@ export const addresses = [
           }
     }
 ]
+
+export { Address, addresses }
