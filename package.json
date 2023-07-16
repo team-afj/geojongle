@@ -12,5 +12,8 @@
   },
   "scripts": {
     "build": "./scripts/build.sh"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.3"
   }
 }

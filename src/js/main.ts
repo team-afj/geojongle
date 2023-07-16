@@ -2,7 +2,7 @@ import "../css/main.css";
 import Leaflet from "leaflet";
 import { Address, addresses } from "./data";
 
-(Leaflet.Icon as any).Default.imagePath = "images/";
+Leaflet.Icon.Default.imagePath = "images/";
 
 let map = Leaflet.map("map").setView([46.603354, 1.8883335], 5);
 

@@ -17,7 +17,7 @@ const addresses: Address[] = [
   {
     id: 0,
     name: "Atelier de l'Association Parisienne de Jonglerie",
-    tags: ["atelier"],
+    tags: ["atelier", "association"],
     address: "35 rue du Borrégo",
     cp: "75019",
     city: "Paris",
