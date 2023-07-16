@@ -2,4 +2,4 @@ dev:
 	scripts/build.sh --watch
 
 fmt:
-	prettier . --write
+	yarn exec -- prettier . --write
