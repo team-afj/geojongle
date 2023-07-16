@@ -1,26 +1,30 @@
-import "../css/main.css"
-import Leaflet from "leaflet"
-import { Address, addresses } from "./data"
+import "../css/main.css";
+import Leaflet from "leaflet";
+import { Address, addresses } from "./data";
 
-(Leaflet.Icon as any).Default.imagePath = "images/"
+(Leaflet.Icon as any).Default.imagePath = "images/";
 
-let map = Leaflet.map('map').setView([46.603354, 1.8883335], 5);
+let map = Leaflet.map("map").setView([46.603354, 1.8883335], 5);
 
-Leaflet.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution:
+    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
-const make_marker = (address : Address) =>{
-  let m =
-    Leaflet.marker([address.osm_data.lat, address.osm_data.lon]).addTo(map);
-  m.bindPopup(`<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`).openPopup();
-  return m
-}
+const make_marker = (address: Address) => {
+  let m = Leaflet.marker([address.osm_data.lat, address.osm_data.lon]).addTo(
+    map,
+  );
+  m.bindPopup(
+    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`,
+  ).openPopup();
+  return m;
+};
 
-const markers = addresses.map(make_marker)
+const markers = addresses.map(make_marker);
 
-console.log(addresses)
+console.log(addresses);
 
 /*
 [
