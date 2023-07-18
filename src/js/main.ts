@@ -2,13 +2,15 @@ import "../css/main.css";
 import Leaflet from "leaflet";
 import { Address, addresses } from "./data";
 
-Leaflet.Icon.Default.imagePath = "images/";
+Leaflet.Icon.Default.imagePath = "leaflet-images/";
 
 // Page elements
 const table = document.getElementById("data-tbl")! as HTMLTableElement;
+const table_body = document.getElementById(
+  "data-tbl-body"
+)! as HTMLTableSectionElement;
 
 // Map initialization
-
 let map = Leaflet.map("map").setView([46.603354, 1.8883335], 5);
 
 Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -16,9 +18,6 @@ Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
-
-const locate_svg =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M3.05,13H1V11H3.05C3.5,6.83 6.83,3.5 11,3.05V1H13V3.05C17.17,3.5 20.5,6.83 20.95,11H23V13H20.95C20.5,17.17 17.17,20.5 13,20.95V23H11V20.95C6.83,20.5 3.5,17.17 3.05,13M12,5A7,7 0 0,0 5,12A7,7 0 0,0 12,19A7,7 0 0,0 19,12A7,7 0 0,0 12,5Z" /></svg>';
 
 // Controls
 const locate_btn = Leaflet.DomUtil.create("div");
@@ -30,7 +29,7 @@ locate_btn.appendChild(locate_btn_link);
 let Locate = Leaflet.Control.extend({
   onAdd: function (map) {
     Leaflet.DomEvent.on(locate_btn_link, "click", (_) =>
-      map.locate({ setView: true, maxZoom: 12 }),
+      map.locate({ setView: true, maxZoom: 12 })
     );
 
     return locate_btn;
@@ -44,52 +43,54 @@ let Locate = Leaflet.Control.extend({
 map.addControl(new Locate({ position: "topleft" }));
 
 // Markers
-
 const make_marker = (address: Address) => {
-  let m = Leaflet.marker([address.osm_data.lat, address.osm_data.lon]).addTo(
-    map,
+  let marker = Leaflet.marker([address.lat, address.lon]).addTo(map);
+  marker.bindPopup(
+    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`
   );
-  m.bindPopup(
-    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`,
-  ).openPopup();
-  return m;
+  return { ...address, marker };
 };
 
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
-const table_rows = addresses.map((address) => {
-  let row = document.createElement("tr");
-  let id = document.createElement("td");
-  id.innerHTML = address.id.toString();
-  let name = document.createElement("td");
-  name.innerHTML = address.name;
-  let city = document.createElement("td");
-  city.innerHTML = address.city;
+const addresses_with_marker = addresses.map(make_marker);
 
-  row.appendChild(id);
-  row.appendChild(name);
-  row.appendChild(city);
-  return row;
-});
+const reset_table = (addresses) => {
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+  // Empty the table (but keep the header)
+  while (table_body.rows.length) {
+    table_body.deleteRow(0);
+  }
 
-const markers = addresses.map(make_marker);
-
-const reset_table = (addresses: Address[]) => {
-  // Empty the table
-  table.querySelectorAll("tbody").forEach((tbody) => {
-    tbody.remove();
-  });
   // Add new values
   addresses.forEach((address) => {
-    let row = table.insertRow();
+    let row = table_body.insertRow();
     row.insertCell().innerHTML = address.id.toString();
     row.insertCell().innerHTML = address.name;
     row.insertCell().innerHTML = address.city;
+    Leaflet.DomEvent.on(row, "click", () => address.marker.openPopup());
   });
-  // rows.forEach((row) => table?.appendChild(row));
 };
 
-reset_table(addresses);
-console.log(addresses);
+// On map move we update the marker visibility in the table and the order
+
+const on_map_update = () => {
+  let map_bounds = map.getBounds();
+  let map_center = map.getCenter();
+  addresses_with_marker.sort(
+    (a, b) =>
+      Leaflet.latLng(a.lat, a.lon).distanceTo(map_center) -
+      Leaflet.latLng(b.lat, b.lon).distanceTo(map_center)
+  );
+  let addresses_with_visibility = addresses_with_marker.map((a) => {
+    let visible = map_bounds.contains([a.lat, a.lon]);
+    return { ...a, visible };
+  });
+  reset_table(addresses_with_visibility);
+};
+
+map.on({ zoomend: on_map_update, moveend: on_map_update });
+
+// Initialize the table:
+on_map_update();
 
 /*
 [
