@@ -1,5 +1,5 @@
 import "../css/main.css";
-import Leaflet from "leaflet";
+import Leaflet, { marker } from "leaflet";
 import { Address, addresses } from "./data";
 
 Leaflet.Icon.Default.imagePath = "leaflet-images/";
@@ -48,43 +48,53 @@ const make_marker = (address: Address) => {
   marker.bindPopup(
     `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`
   );
-  return { ...address, marker };
+  return { address, marker };
 };
 
+type with_marker = {
+  address: Address;
+  marker: Leaflet.Marker<any>;
+};
 const addresses_with_marker = addresses.map(make_marker);
 
-const reset_table = (addresses) => {
+const marker_groups = addresses.reduce((acc, address) => {
+  return acc;
+}, []);
+
+const reset_table = (addresses: with_marker[]) => {
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
   // Empty the table (but keep the header)
   while (table_body.rows.length) {
     table_body.deleteRow(0);
   }
 
+  let map_bounds = map.getBounds();
+
   // Add new values
-  addresses.forEach((address) => {
+  addresses.forEach(({ address, marker }) => {
+    let _visible = map_bounds.contains([address.lat, address.lon]);
     let row = table_body.insertRow();
     row.insertCell().innerHTML = address.id.toString();
     row.insertCell().innerHTML = address.name;
     row.insertCell().innerHTML = address.city;
-    Leaflet.DomEvent.on(row, "click", () => address.marker.openPopup());
+    Leaflet.DomEvent.on(row, "click", () => {
+      let m = marker as Leaflet.Marker;
+      if (m.isPopupOpen()) map.flyTo(m.getLatLng(), 12);
+      else m.openPopup();
+    });
   });
 };
 
 // On map move we update the marker visibility in the table and the order
 
 const on_map_update = () => {
-  let map_bounds = map.getBounds();
   let map_center = map.getCenter();
   addresses_with_marker.sort(
-    (a, b) =>
+    ({ address: a }, { address: b }) =>
       Leaflet.latLng(a.lat, a.lon).distanceTo(map_center) -
       Leaflet.latLng(b.lat, b.lon).distanceTo(map_center)
   );
-  let addresses_with_visibility = addresses_with_marker.map((a) => {
-    let visible = map_bounds.contains([a.lat, a.lon]);
-    return { ...a, visible };
-  });
-  reset_table(addresses_with_visibility);
+  reset_table(addresses_with_marker);
 };
 
 map.on({ zoomend: on_map_update, moveend: on_map_update });
