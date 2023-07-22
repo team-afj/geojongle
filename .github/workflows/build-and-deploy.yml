@@ -15,6 +15,9 @@ jobs:
           yarn
           yarn build
 
+      - name: Remove .gitignore from dist 🔧 # Required for the deployment to proceed.
+        run: rm dist/.gitignore
+
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
