@@ -3,3 +3,6 @@ dev:
 
 fmt:
 	yarn exec -- prettier . --write
+
+clean:
+	git clean -dfX dist
