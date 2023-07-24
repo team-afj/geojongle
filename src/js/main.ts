@@ -1,6 +1,7 @@
 import "../css/main.css";
 import Leaflet, { marker } from "leaflet";
 import { Address, addresses } from "./data";
+import * as Ui from "./ui_elements";
 
 Leaflet.Icon.Default.imagePath = "leaflet-images/";
 
@@ -45,9 +46,7 @@ map.addControl(new Locate({ position: "topleft" }));
 // Markers
 const make_marker = (address: Address) => {
   let marker = Leaflet.marker([address.lat, address.lon]).addTo(map);
-  marker.bindPopup(
-    `<b>${address.name}</b></br><a target="_blank" href="${address.url}">Voir les informations les plus récentes.</a><br>${address.description}`
-  );
+  marker.bindPopup(Ui.marker_popup(address)).openPopup();
   return { address, marker };
 };
 
@@ -76,7 +75,7 @@ const reset_table = (addresses: with_marker[]) => {
     let row = table_body.insertRow();
     row.insertCell().innerHTML = address.id.toString();
     row.insertCell().innerHTML = address.name;
-    row.insertCell().innerHTML = address.city;
+    row.insertCell().innerHTML = `${address.city} (${address.cp})`;
     Leaflet.DomEvent.on(row, "click", () => {
       let m = marker as Leaflet.Marker;
       if (m.isPopupOpen()) map.flyTo(m.getLatLng(), 12);

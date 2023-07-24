@@ -69,7 +69,7 @@ const addresses: Address[] = [
     phone: "",
     url: "https://www.facebook.com/groups/195906267664217",
     description:
-      "Un espace de pratique libre ouvert à tous. Régulièrement fréquenté par les jongleurs. Horaires officiels: https://www.104.fr/",
+      'Un espace de pratique libre ouvert à tous. Régulièrement fréquenté par les jongleurs. Site officiel: <a href="https://www.104.fr/" target="_blank">www.104.fr</a>',
     lat: 48.89022835,
     lon: 2.3700638016472877,
     osm_data: {
