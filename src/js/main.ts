@@ -2,10 +2,12 @@ import "../css/main.css";
 import Leaflet, { marker } from "leaflet";
 import { Address, addresses } from "./data";
 import * as Ui from "./ui_elements";
+import Fuse from "fuse.js";
 
 Leaflet.Icon.Default.imagePath = "leaflet-images/";
 
 // Page elements
+const filter_text = document.getElementById("data-filter")! as HTMLInputElement;
 const table = document.getElementById("data-tbl")! as HTMLTableElement;
 const table_body = document.getElementById(
   "data-tbl-body"
@@ -58,7 +60,7 @@ const make_marker = (address: Address) => {
 
   layer_group.addLayer(marker);
 
-  marker.bindPopup(Ui.marker_popup(address)).openPopup();
+  marker.bindPopup(Ui.marker_popup(address));
   return { address, marker };
 };
 
@@ -76,8 +78,9 @@ layer_groups.forEach((group, name) => {
 });
 layer_control.addTo(map);
 
-const reset_table = (addresses: with_marker[]) => {
+const redraw_table = (addresses: with_marker[]) => {
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+
   // Empty the table (but keep the header)
   while (table_body.rows.length) {
     table_body.deleteRow(0);
@@ -100,47 +103,68 @@ const reset_table = (addresses: with_marker[]) => {
   });
 };
 
-// On map move we update the marker visibility in the table and the order
+const fuse_options = {
+  // isCaseSensitive: false,
+  // includeScore: false,
+  shouldSort: false,
+  // includeMatches: false,
+  // findAllMatches: true,
+  // minMatchCharLength: 1,
+  // location: 0,
+  threshold: 0.5,
+  // distance: 100,
+  // useExtendedSearch: false,
+  ignoreLocation: true,
+  // ignoreFieldNorm: false,
+  // fieldNormWeight: 1,
+  keys: [
+    "address.name",
+    "address.city",
+    "address.cp",
+    "address.osm_data.address.country",
+  ],
+};
 
+const fuse_index = Fuse.createIndex(fuse_options.keys, addresses_with_marker);
+const fuse = new Fuse(addresses_with_marker, fuse_options, fuse_index);
+let search_options = { filter: "" };
+
+const refresh_table = () => {
+  // We filter addresses using the fuzzy search
+  if (search_options.filter.length === 0) redraw_table(addresses_with_marker);
+  else {
+    let filtered = fuse
+      .search(search_options.filter)
+      .map(({ item: address }) => address);
+    redraw_table(filtered);
+  }
+};
+
+// On map move we update the marker visibility in the table and the order
 const on_map_update = () => {
   let map_center = map.getCenter();
+
+  // We sort the addresses by closest to the center of the map
   addresses_with_marker.sort(
     ({ address: a }, { address: b }) =>
       Leaflet.latLng(a.lat, a.lon).distanceTo(map_center) -
       Leaflet.latLng(b.lat, b.lon).distanceTo(map_center)
   );
-  reset_table(addresses_with_marker);
+
+  refresh_table();
 };
 
+// On filter update
+const on_filter_update = (new_value) => {
+  search_options.filter = new_value;
+  refresh_table();
+};
+
+// Add event listeners
 map.on({ zoomend: on_map_update, moveend: on_map_update });
+filter_text.addEventListener("keyup", (_e) =>
+  on_filter_update(filter_text.value)
+);
 
 // Initialize the table:
 on_map_update();
-
-/*
-[
-  {
-    "place_id": 297967691,
-    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
-    "osm_type": "relation",
-    "osm_id": 2202162,
-    "boundingbox": [
-      "-50.2187169",
-      "51.3055721",
-      "-178.3873749",
-      "172.3057152"
-    ],
-    "lat": "46.603354",
-    "lon": "1.8883335",
-    "display_name": "France",
-    "class": "boundary",
-    "type": "administrative",
-    "importance": 1.0133264437396503,
-    "icon": "https://nominatim.openstreetmap.org/ui/mapicons/poi_boundary_administrative.p.20.png",
-    "address": {
-      "country": "France",
-      "country_code": "fr"
-    }
-  }
-]
-*/
