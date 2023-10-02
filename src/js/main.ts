@@ -43,9 +43,21 @@ let Locate = Leaflet.Control.extend({
 
 map.addControl(new Locate({ position: "topleft" }));
 
+let layer_groups: Map<string, Leaflet.LayerGroup> = new Map();
+
 // Markers
 const make_marker = (address: Address) => {
-  let marker = Leaflet.marker([address.lat, address.lon]).addTo(map);
+  let marker = Leaflet.marker([address.lat, address.lon]);
+
+  let layer_group = layer_groups.get(address.tags[0]);
+
+  if (layer_group === undefined) {
+    layer_group = new Leaflet.LayerGroup();
+    layer_groups.set(address.tags[0], layer_group);
+  }
+
+  layer_group.addLayer(marker);
+
   marker.bindPopup(Ui.marker_popup(address)).openPopup();
   return { address, marker };
 };
@@ -54,11 +66,15 @@ type with_marker = {
   address: Address;
   marker: Leaflet.Marker<any>;
 };
+
 const addresses_with_marker = addresses.map(make_marker);
 
-const marker_groups = addresses.reduce((acc, address) => {
-  return acc;
-}, []);
+let layer_control = new Leaflet.Control.Layers();
+layer_groups.forEach((group, name) => {
+  group.addTo(map);
+  layer_control.addOverlay(group, name);
+});
+layer_control.addTo(map);
 
 const reset_table = (addresses: with_marker[]) => {
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
