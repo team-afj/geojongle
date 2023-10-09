@@ -42,7 +42,7 @@ const addresses: Address[] = [
     phone: "",
     url: "https://www.facebook.com/groups/195906267664217",
     description:
-      'Un espace de pratique libre ouvert à tous. Régulièrement fréquenté par les jongleurs. Site officiel: <a href="https://www.104.fr/" target="_blank">www.104.fr</a>',
+      'Un espace de pratique libre ouvert à tous. Régulièrement fréquenté par les jongleureuses. Site officiel: <a href="https://www.104.fr/" target="_blank">www.104.fr</a>',
     lat: 48.89022835,
     lon: 2.3700638016472877,
     osm_place_id: 176263154,
@@ -61,6 +61,22 @@ const addresses: Address[] = [
       "Une convention annuelle, détails et renseignements sur le site internet.",
     lat: 49.030415649999995,
     lon: 2.0480828272144045,
+    osm_place_id: 163168480,
+  },
+  {
+    id: 3,
+    name: "Ateliers des Capucins",
+    tags: ["convention"],
+    address: "25 rue de Pontaniou",
+    cp: "29200",
+    city: "Brest",
+    country: "France",
+    phone: "",
+    url: "https://www.ateliersdescapucins.fr/fr/infos-pratiques",
+    description:
+      "Un espace de pratique libre ouvert à tous. Régulièrement fréquenté par les jongleureuses.",
+    lat: 48.3893054,
+    lon: -4.498250191014672,
     osm_place_id: 163168480,
   },
 ];
