@@ -45,40 +45,34 @@ let Locate = Leaflet.Control.extend({
 
 map.addControl(new Locate({ position: "topleft" }));
 
-let layer_groups: Map<string, Leaflet.LayerGroup> = new Map();
-
-// Markers
-const make_marker = (address: Address) => {
-  let marker = Leaflet.marker([address.lat, address.lon]);
-
-  let layer_group = layer_groups.get(address.tags[0]);
-
-  if (layer_group === undefined) {
-    layer_group = new Leaflet.LayerGroup();
-    layer_groups.set(address.tags[0], layer_group);
-  }
-
-  layer_group.addLayer(marker);
-
-  marker.bindPopup(Ui.marker_popup(address));
-  return { address, marker };
-};
-
-type with_marker = {
+type address_with_marker = {
   address: Address;
   marker: Leaflet.Marker<any>;
 };
 
-const addresses_with_marker = addresses.map(make_marker);
+/** Creates a new marker for this address and adds it to the correct layer.
+ * @remarks
+ * Mutates `layer_groups`
+ */
+const make_marker =
+  (layer_groups) =>
+  (address: Address): address_with_marker => {
+    let marker = Leaflet.marker([address.lat, address.lon]);
 
-let layer_control = new Leaflet.Control.Layers();
-layer_groups.forEach((group, name) => {
-  group.addTo(map);
-  layer_control.addOverlay(group, name);
-});
-layer_control.addTo(map);
+    let layer_group = layer_groups.get(address.tags[0]);
 
-const redraw_table = (addresses: with_marker[]) => {
+    if (layer_group === undefined) {
+      layer_group = new Leaflet.LayerGroup();
+      layer_groups.set(address.tags[0], layer_group);
+    }
+
+    layer_group.addLayer(marker);
+
+    marker.bindPopup(Ui.marker_popup(address));
+    return { address, marker };
+  };
+
+const redraw_table = (addresses: address_with_marker[]) => {
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
 
   // Empty the table (but keep the header)
@@ -103,6 +97,7 @@ const redraw_table = (addresses: with_marker[]) => {
   });
 };
 
+/** Fuzzy search configuration */
 const fuse_options = {
   // isCaseSensitive: false,
   // includeScore: false,
@@ -117,27 +112,39 @@ const fuse_options = {
   ignoreLocation: true,
   // ignoreFieldNorm: false,
   // fieldNormWeight: 1,
-  keys: [
-    "address.name",
-    "address.city",
-    "address.cp",
-    "address.osm_data.address.country",
-  ],
+  keys: ["address.name", "address.city", "address.cp", "address.country"],
 };
 
+/** Prepared addresses with markers */
+let layer_groups: Map<string, Leaflet.LayerGroup> = new Map();
+const addresses_with_marker = addresses.map(make_marker(layer_groups));
+
+let layer_control = new Leaflet.Control.Layers();
+
+layer_groups.forEach((group, name) => {
+  group.addTo(map);
+  layer_control.addOverlay(group, name);
+});
+layer_control.addTo(map);
+
 const fuse_index = Fuse.createIndex(fuse_options.keys, addresses_with_marker);
-const fuse = new Fuse(addresses_with_marker, fuse_options, fuse_index);
+const fuzzy_addresses = new Fuse(
+  addresses_with_marker,
+  fuse_options,
+  fuse_index
+);
 let search_options = { filter: "" };
 
-const refresh_table = () => {
+const refresh_table = (addresses_with_marker) => {
   // We filter addresses using the fuzzy search
-  if (search_options.filter.length === 0) redraw_table(addresses_with_marker);
-  else {
-    let filtered = fuse
+  let addresses = addresses_with_marker;
+
+  if (search_options.filter.length != 0)
+    addresses = fuzzy_addresses
       .search(search_options.filter)
       .map(({ item: address }) => address);
-    redraw_table(filtered);
-  }
+
+  redraw_table(addresses);
 };
 
 // On map move we update the marker visibility in the table and the order
@@ -151,17 +158,18 @@ const on_map_update = () => {
       Leaflet.latLng(b.lat, b.lon).distanceTo(map_center)
   );
 
-  refresh_table();
+  refresh_table(addresses_with_marker);
 };
 
 // On filter update
 const on_filter_update = (new_value) => {
   search_options.filter = new_value;
-  refresh_table();
+  refresh_table(addresses_with_marker);
 };
 
 // Add event listeners
 map.on({ zoomend: on_map_update, moveend: on_map_update });
+
 filter_text.addEventListener("keyup", (_e) =>
   on_filter_update(filter_text.value)
 );
